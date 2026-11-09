@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-notificacoes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-notificacoes
+  template:
+    metadata:
+      labels:
+        app: ms-notificacoes
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+      containers:
+        - name: ms-notificacoes
+          image: ms-notificacoes:local
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: ms-notificacoes
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          startupProbe:
+            httpGet:
+              path: /notificacoes/health
+              port: 8080
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /notificacoes/health
+              port: 8080
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /notificacoes/live
+              port: 8080
+            periodSeconds: 10

@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ms-notificacoes
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /notificacoes
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-notificacoes
+                port:
+                  number: 80

@@ -1,0 +1,48 @@
+services:
+  ms-notificacoes:
+    build: .
+    ports: ["8082:8080"]
+    environment:
+      DATABASE_URL: postgres://notificacoes:local-only@postgres-notificacoes:5432/notificacoesdb?sslmode=disable
+      RABBITMQ_URL: amqp://app:local-only@rabbitmq:5672/
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: pedidos@lanchonete.test
+      SMTP_TLS: none
+    depends_on:
+      postgres-notificacoes:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+  postgres-notificacoes:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: notificacoes
+      POSTGRES_PASSWORD: local-only
+      POSTGRES_DB: notificacoesdb
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notificacoes -d notificacoesdb"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    ports: ["127.0.0.1:5672:5672", "127.0.0.1:15672:15672"]
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: local-only
+    volumes: ["rabbit-data:/var/lib/rabbitmq"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports: ["127.0.0.1:8025:8025"]
+volumes:
+  postgres-data:
+  rabbit-data:

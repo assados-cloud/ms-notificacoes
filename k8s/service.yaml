@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-notificacoes
+spec:
+  selector:
+    app: ms-notificacoes
+  ports:
+    - port: 80
+      targetPort: 8080
